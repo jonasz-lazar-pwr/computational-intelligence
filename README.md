@@ -1,1 +1,1 @@
-# computational-intelligence-techniques
+# computational-intelligence
