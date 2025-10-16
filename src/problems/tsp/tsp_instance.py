@@ -27,7 +27,7 @@ class TSPInstance(ITSPInstance):
         self.has_loaded: bool = False
         self.optimal_result: Optional[int] = None
         self.optimal_results_path: Path = Path(optimal_results_path)
-        self.parser: ITSPParser = TSPParser()
+        self.parser: ITSPParser = TSPParser(self.file_path)
 
     def load_metadata(self) -> None:
         """Load metadata and coordinates from a TSPLIB file."""

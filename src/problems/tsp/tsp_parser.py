@@ -13,15 +13,15 @@ COORD_PARTS_COUNT = 3
 class TSPParser(ITSPParser):
     """Parse TSPLIB-formatted .tsp files supporting coordinates and explicit matrices."""
 
-    def __init__(self) -> None:
-        """Initialize parser attributes."""
-        self.file_path: Optional[Path] = None
+    def __init__(self, file_path: Path | None = None) -> None:
+        """Initialize parser with optional file path."""
+        self.file_path: Optional[Path] = file_path
         self.content: Optional[str] = None
         self.coordinates: List[Tuple[float, float]] = []
         self.distance_matrix: List[List[int]] = []
         self.edge_weight_type: Optional[str] = None
         self.edge_weight_format: Optional[str] = None
-        logger.debug("Initialized TSPParser instance.")
+        logger.debug(f"Initialized TSPParser for {self.file_path}")
 
     def validate_file(self, file_path: str) -> None:
         """Read and validate TSPLIB file structure."""

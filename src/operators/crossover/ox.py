@@ -1,27 +1,28 @@
+import random
+
 from typing import List, Tuple
 
 from src.interfaces.operators_interfaces import ICrossover
 
 
 class OrderCrossover(ICrossover):
-    """Order Crossover (OX)."""
+    """Order Crossover (OX) preserving relative order of elements."""
 
     def crossover(self, p1: List[int], p2: List[int]) -> Tuple[List[int], List[int]]:
-        """Return two offspring created by OX."""
-        n = len(p1)
-        a, b = sorted(__import__("random").sample(range(n), 2))
-        c1 = [None] * n
-        c2 = [None] * n
-        c1[a:b] = p1[a:b]
-        c2[a:b] = p2[a:b]
-        fill1 = [x for x in p2 if x not in c1]
-        fill2 = [x for x in p1 if x not in c2]
-        i1 = i2 = 0
-        for i in range(n):
-            if c1[i] is None:
-                c1[i] = fill1[i1]
-                i1 += 1
-            if c2[i] is None:
-                c2[i] = fill2[i2]
-                i2 += 1
-        return c1, c2
+        """Generate two offspring from two parents using order crossover."""
+        size = len(p1)
+        a, b = sorted(random.sample(range(size), 2))
+
+        def ox(parent1: List[int], parent2: List[int]) -> List[int]:
+            """Perform OX between two parents."""
+            child: List[int | None] = [None] * size
+            child[a:b] = parent1[a:b]
+            fill = [x for x in parent2 if x not in child]
+            idx = 0
+            for i in range(size):
+                if child[i] is None:
+                    child[i] = fill[idx]
+                    idx += 1
+            return [int(x) for x in child if x is not None]
+
+        return ox(p1, p2), ox(p2, p1)

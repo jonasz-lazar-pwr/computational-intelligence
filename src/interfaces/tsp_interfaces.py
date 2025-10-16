@@ -41,6 +41,7 @@ class ITSPInstance(ABC):
     name: Optional[str]
     dimension: Optional[int]
     edge_weight_type: Optional[str]
+    distance_matrix: List[List[int]]
     has_loaded: bool
     optimal_result: Optional[int]
 

@@ -7,13 +7,13 @@ from src.problems.tsp.tsp_parser import TSPParser
 
 @pytest.fixture()
 def parser() -> TSPParser:
-    """Return TSPParser instance."""
+    """Provide fresh TSPParser instance."""
     return TSPParser()
 
 
 @pytest.fixture()
 def tmp_tsp(tmp_path: Path) -> Path:
-    """Return valid EUC_2D TSP file."""
+    """Return temporary valid EUC_2D TSP file."""
     content = """NAME: test
 TYPE: TSP
 DIMENSION: 3

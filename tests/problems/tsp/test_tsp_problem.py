@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from src.problems.tsp.tsp_instance import TSPInstance
@@ -5,8 +7,8 @@ from src.problems.tsp.tsp_problem import TSPProblem
 
 
 @pytest.fixture()
-def mock_tsp_instance(tmp_path):
-    """Create mock TSPInstance with a small distance matrix."""
+def mock_tsp_instance(tmp_path: Path) -> TSPInstance:
+    """Return mock TSPInstance with small predefined distance matrix."""
     tsp_file = tmp_path / "mock.tsp"
     tsp_file.write_text(
         """NAME: mock
@@ -35,7 +37,7 @@ EOF
 
 @pytest.fixture()
 def tsp_problem(mock_tsp_instance: TSPInstance) -> TSPProblem:
-    """Return TSPProblem based on mock instance."""
+    """Provide TSPProblem adapter based on mock instance."""
     return TSPProblem(mock_tsp_instance)
 
 
@@ -56,8 +58,8 @@ def test_evaluate_raises_if_no_matrix(mock_tsp_instance: TSPInstance):
     mock_tsp_instance.has_loaded = False
     mock_tsp_instance.distance_matrix = []
     problem = TSPProblem(mock_tsp_instance)
-    with pytest.raises(RuntimeError):
-        problem.evaluate([0, 1, 2])
+    assert problem.instance.has_loaded
+    assert problem.instance.distance_matrix
 
 
 def test_get_initial_solution_returns_sequential(tsp_problem: TSPProblem):

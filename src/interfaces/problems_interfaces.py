@@ -1,31 +1,31 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, List
 
 
 class IProblem(ABC):
-    """Generic interface for all optimization problems."""
-
-    @abstractmethod
-    def get_dimension(self) -> int:
-        """Return number of decision variables."""
-        pass
+    """Abstract interface for all optimization problems."""
 
     @abstractmethod
     def evaluate(self, solution: List[int]) -> float:
-        """Compute the fitness (cost) for a given solution."""
+        """Evaluate the quality or cost of a given solution."""
         pass
 
     @abstractmethod
     def get_initial_solution(self) -> List[int]:
-        """Return a valid initial solution."""
+        """Return an initial candidate solution."""
+        pass
+
+    @abstractmethod
+    def get_dimension(self) -> int:
+        """Return the dimensionality or size of the problem."""
+        pass
+
+    @abstractmethod
+    def optimal_value(self) -> float | None:
+        """Return known optimal value if available."""
         pass
 
     @abstractmethod
     def info(self) -> dict[str, Any]:
-        """Return metadata about the problem (optional)."""
-        pass
-
-    @abstractmethod
-    def optimal_value(self) -> Optional[float]:
-        """Return known optimal objective value (if available)."""
+        """Return metadata about the problem instance."""
         pass

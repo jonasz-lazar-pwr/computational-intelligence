@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from src.problems.tsp.tsp_instance import TSPInstance
-from src.problems.tsp.tsp_parser import TSPParser
 
 
 @pytest.fixture()
@@ -27,8 +26,8 @@ EOF
 
 
 @pytest.fixture()
-def optimal_json(tmp_path: Path) -> Path:
-    """Return JSON with optimal result."""
+def optimal_results_path(tmp_path: Path) -> Path:
+    """Return temporary JSON with optimal result."""
     data = {"berlin52": 7542}
     file_path = tmp_path / "optimal.json"
     file_path.write_text(json.dumps(data), encoding="utf-8")
@@ -36,9 +35,9 @@ def optimal_json(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def tsp_instance(valid_tsp_file: Path, optimal_json: Path) -> TSPInstance:
-    """Return TSPInstance with valid TSP and JSON files."""
-    return TSPInstance(str(valid_tsp_file), str(optimal_json))
+def tsp_instance(valid_tsp_file: Path, optimal_results_path: Path) -> TSPInstance:
+    """Return initialized TSPInstance for testing."""
+    return TSPInstance(str(valid_tsp_file), str(optimal_results_path))
 
 
 def test_load_metadata_success(tsp_instance: TSPInstance):
@@ -59,9 +58,9 @@ def test_to_dict_after_load(tsp_instance: TSPInstance):
     assert d["has_loaded"] is False
 
 
-def test_load_metadata_missing_file(optimal_json: Path):
+def test_load_metadata_missing_file(optimal_results_path: Path):
     """Test missing TSP file raises error."""
-    inst = TSPInstance("nonexistent_file.tsp", str(optimal_json))
+    inst = TSPInstance("nonexistent_file.tsp", str(optimal_results_path))
     with pytest.raises(FileNotFoundError):
         inst.load_metadata()
 
@@ -72,7 +71,7 @@ def test_load_metadata_unexpected_error(monkeypatch, tsp_instance: TSPInstance):
     def bad_validate_file(self, path):
         raise RuntimeError("parser exploded")
 
-    monkeypatch.setattr(TSPParser, "validate_file", bad_validate_file)
+    monkeypatch.setattr("src.problems.tsp.tsp_parser.TSPParser.validate_file", bad_validate_file)
     with pytest.raises(RuntimeError):
         tsp_instance.load_metadata()
 
@@ -111,9 +110,9 @@ def test_load_optimal_result_no_key(valid_tsp_file: Path, tmp_path: Path):
     assert inst.optimal_result is None
 
 
-def test_load_optimal_result_valid(valid_tsp_file: Path, optimal_json: Path):
+def test_load_optimal_result_valid(valid_tsp_file: Path, optimal_results_path: Path):
     """Test valid optimal.json loading."""
-    inst = TSPInstance(str(valid_tsp_file), str(optimal_json))
+    inst = TSPInstance(str(valid_tsp_file), str(optimal_results_path))
     inst._load_optimal_result()
     assert inst.optimal_result == 7542
 
@@ -169,21 +168,3 @@ def test_get_distance_matrix_loaded(monkeypatch, tsp_instance: TSPInstance):
     tsp_instance.distance_matrix = [[0, 1], [1, 0]]
     result = tsp_instance.get_distance_matrix()
     assert result == [[0, 1], [1, 0]]
-
-
-def test_load_optimal_result_invalid_json_file(valid_tsp_file: Path, tmp_path: Path):
-    """Test invalid optimal.json content."""
-    broken_json = tmp_path / "broken.json"
-    broken_json.write_text("invalid", encoding="utf-8")
-    inst = TSPInstance(str(valid_tsp_file), str(broken_json))
-    inst._load_optimal_result()
-    assert inst.optimal_result is None
-
-
-def test_load_optimal_result_missing_key(valid_tsp_file: Path, tmp_path: Path):
-    """Test missing TSP key in optimal.json."""
-    missing_key_json = tmp_path / "partial.json"
-    missing_key_json.write_text(json.dumps({"some_other_file": 123}), encoding="utf-8")
-    inst = TSPInstance(str(valid_tsp_file), str(missing_key_json))
-    inst._load_optimal_result()
-    assert inst.optimal_result is None

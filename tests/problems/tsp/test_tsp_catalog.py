@@ -10,7 +10,7 @@ from src.problems.tsp.tsp_instance import TSPInstance
 
 @pytest.fixture()
 def data_dir(tmp_path: Path) -> Path:
-    """Return temp directory with valid and invalid TSP files."""
+    """Return temporary directory with valid and invalid TSP files."""
     good_tsp = tmp_path / "berlin52.tsp"
     bad_tsp = tmp_path / "invalid.tsp"
     not_tsp = tmp_path / "README.txt"
@@ -43,7 +43,7 @@ def optimal_json(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def tsp_catalog(optimal_json: Path) -> TSPCatalog:
-    """Return TSPCatalog instance."""
+    """Provide initialized TSPCatalog instance."""
     return TSPCatalog(str(optimal_json))
 
 
