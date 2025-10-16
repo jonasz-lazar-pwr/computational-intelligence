@@ -2,8 +2,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from src.core.logger import get_logger
-from src.interfaces.i_tsp_catalog import ITSPCatalog
-from src.interfaces.i_tsp_instance import ITSPInstance
+from src.interfaces.tsp_interfaces import ITSPCatalog, ITSPInstance
 from src.problems.tsp.tsp_instance import TSPInstance
 
 logger = get_logger(__name__)

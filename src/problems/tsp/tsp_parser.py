@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from src.core.logger import get_logger
-from src.interfaces.i_tsp_parser import ITSPParser
+from src.interfaces.tsp_interfaces import ITSPParser
 
 logger = get_logger(__name__)
 COORD_PARTS_COUNT = 3

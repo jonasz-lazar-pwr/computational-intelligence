@@ -4,12 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from src.interfaces.i_tsp_catalog import ITSPCatalog
-from src.interfaces.i_tsp_instance import ITSPInstance
-from src.interfaces.i_tsp_parser import ITSPParser
+from src.interfaces.tsp_interfaces import ITSPCatalog, ITSPInstance, ITSPParser
 from src.problems.tsp.tsp_catalog import TSPCatalog
 from src.problems.tsp.tsp_instance import TSPInstance
 from src.problems.tsp.tsp_parser import TSPParser
+from src.problems.tsp.tsp_problem import TSPProblem
 
 
 @pytest.fixture()
@@ -51,3 +50,9 @@ EOF
 def tsp_catalog(optimal_results_path: str) -> ITSPCatalog:
     """Return TSPCatalog using the same optimal.json."""
     return TSPCatalog(optimal_results_path)
+
+
+@pytest.fixture()
+def tsp_problem(tsp_instance: ITSPInstance) -> TSPProblem:
+    """Return TSPProblem adapter for a prepared instance."""
+    return TSPProblem(tsp_instance)

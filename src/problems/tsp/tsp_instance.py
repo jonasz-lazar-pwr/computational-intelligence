@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from src.core.logger import get_logger
-from src.interfaces.i_tsp_instance import ITSPInstance
-from src.interfaces.i_tsp_parser import ITSPParser
+from src.interfaces.tsp_interfaces import ITSPInstance, ITSPParser
 from src.problems.tsp.tsp_parser import TSPParser
 
 logger = get_logger(__name__)
