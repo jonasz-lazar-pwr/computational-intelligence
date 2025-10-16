@@ -42,6 +42,8 @@ ignore = [
 [lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "B008", "PLR2004", "T201"]
 "__init__.py" = ["F401"]
+"src/algorithms/**/*.py" = ["S311"]
+"src/operators/**/*.py" = ["S311"]
 
 # --------------------------
 # Import sorting
