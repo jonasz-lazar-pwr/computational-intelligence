@@ -1,0 +1,18 @@
+[run]
+source = src
+omit =
+    src/interfaces/*
+    src/core/logger.py
+    src/utils/*
+    src/main.py
+    tests/conftest.py
+    tests/tsp/conftest.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    pass
+show_missing = True
+sort = Name
