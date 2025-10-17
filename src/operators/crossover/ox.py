@@ -1,6 +1,6 @@
 import random
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from src.interfaces.operators_interfaces import ICrossover
 
@@ -15,7 +15,7 @@ class OrderCrossover(ICrossover):
 
         def ox(parent1: List[int], parent2: List[int]) -> List[int]:
             """Perform OX between two parents."""
-            child: List[int | None] = [None] * size
+            child: List[Optional[int]] = [None] * size
             child[a:b] = parent1[a:b]
             fill = [x for x in parent2 if x not in child]
             idx = 0
@@ -23,6 +23,6 @@ class OrderCrossover(ICrossover):
                 if child[i] is None:
                     child[i] = fill[idx]
                     idx += 1
-            return [int(x) for x in child if x is not None]
+            return [x for x in child if x is not None]
 
         return ox(p1, p2), ox(p2, p1)

@@ -7,7 +7,7 @@ from src.core.logger import get_logger
 from src.interfaces.tsp_interfaces import ITSPParser
 
 logger = get_logger(__name__)
-COORD_PARTS_COUNT = 3
+_COORD_PARTS_COUNT = 3
 
 
 class TSPParser(ITSPParser):
@@ -76,7 +76,7 @@ class TSPParser(ITSPParser):
                     if line.strip() == "EOF":
                         break
                     parts = line.split()
-                    if len(parts) >= COORD_PARTS_COUNT:
+                    if len(parts) >= _COORD_PARTS_COUNT:
                         try:
                             _, x, y = parts[:3]
                             self.coordinates.append((float(x), float(y)))
@@ -102,7 +102,7 @@ class TSPParser(ITSPParser):
                     if line.strip() == "EOF":
                         break
                     parts = line.split()
-                    if len(parts) == COORD_PARTS_COUNT:
+                    if len(parts) == _COORD_PARTS_COUNT:
                         try:
                             _, x, y = parts
                             display_coordinates.append((float(x), float(y)))

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from src.interfaces.factories_interfaces import IProblemFactory
 from src.interfaces.problems_interfaces import IProblem
@@ -7,12 +7,17 @@ from src.problems.tsp.tsp_problem import TSPProblem
 
 
 class ProblemFactory(IProblemFactory):
-    """Factory for creating problem instances."""
+    """Creates problem instances such as TSP."""
 
-    @staticmethod
-    def build(problem_type: str, **kw: Any) -> IProblem:
-        """Build and return a problem instance by type."""
-        if problem_type == "tsp":
-            instance = TSPInstance(**kw)
-            return TSPProblem(instance)
-        raise ValueError(f"Unknown problem type: {problem_type}")
+    _REGISTRY: ClassVar[dict[str, Any]] = {"tsp": (TSPInstance, TSPProblem)}
+
+    @classmethod
+    def build(cls, name: str, **config: Any) -> IProblem:
+        """Construct and return a problem instance based on name and configuration."""
+        try:
+            instance_cls, problem_cls = cls._REGISTRY[name]
+        except KeyError as err:
+            raise ValueError(f"Unknown problem: {name}") from err
+
+        instance = instance_cls(**config)
+        return problem_cls(instance)
