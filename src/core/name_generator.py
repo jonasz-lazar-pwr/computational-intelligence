@@ -1,34 +1,45 @@
-from pathlib import Path
-
 from src.interfaces.core_interfaces import INameGenerator
 
 
 class NameGenerator(INameGenerator):
-    """Builds consistent experiment identifiers from configuration dictionaries."""
+    """Generates clean, consistent experiment names based on problem and algorithm config."""
 
     @staticmethod
     def _sanitize(value: float | int | str) -> str:
         """Convert value to string and replace '.' with '_'."""
         return str(value).replace(".", "_")
 
-    def generate(self, problem: dict, alg: dict, prefix: str) -> str:
-        """Generate a unique experiment name based on problem and algorithm config."""
-        instance = Path(problem["file_path"]).stem
-        sel = alg["selection_config"]["name"]
-        sel_rate = alg["selection_config"].get("rate", 0)
-        cx = alg["crossover_config"]["name"]
+    def generate(self, problem: dict, alg: dict) -> str:
+        """Generate experiment name using fixed scheme."""
+        problem_name = problem.get("name", "unknown")
+        instance = problem.get("instance_name") or "unknown_instance"
+
+        pop_size = alg.get("population_size", 0)
+        max_time = alg.get("max_time", 0)
+        algo_name = alg.get("name", "unknown")
+
+        sel_cfg = alg.get("selection_config", {})
+        sel_name = sel_cfg.get("name", "sel")
+        sel_rate = sel_cfg.get("rate", 0)
+
+        cx_cfg = alg.get("crossover_config", {})
+        cx_name = cx_cfg.get("name", "cx")
         cx_rate = alg.get("crossover_rate", 0)
-        mut = alg["mutation_config"]["name"]
+
+        mut_cfg = alg.get("mutation_config", {})
+        mut_name = mut_cfg.get("name", "mut")
         mut_rate = alg.get("mutation_rate", 0)
-        succ = alg["succession_config"]["name"]
-        succ_rate = (
-            alg["succession_config"].get("elite_rate")
-            or alg["succession_config"].get("replacement_rate")
-            or 0
-        )
+
+        succ_cfg = alg.get("succession_config", {})
+        succ_name = succ_cfg.get("name", "succ")
+        succ_rate = succ_cfg.get("elite_rate") or succ_cfg.get("replacement_rate") or 0
+
         return (
-            f"{prefix}_tsp_{instance}_ga_population_{alg['population_size']}_"
-            f"time_{int(alg['max_time'])}_{sel}_{self._sanitize(sel_rate)}_"
-            f"{cx}_{self._sanitize(cx_rate)}_{mut}_{self._sanitize(mut_rate)}_"
-            f"{succ}_{self._sanitize(succ_rate)}"
+            f"{problem_name}_{instance}_"
+            f"{algo_name}_population_{pop_size}_"
+            f"time_{int(float(max_time))}_"
+            f"{sel_name}_{self._sanitize(sel_rate)}_"
+            f"{cx_name}_{self._sanitize(cx_rate)}_"
+            f"{mut_name}_{self._sanitize(mut_rate)}_"
+            f"{succ_name}_{self._sanitize(succ_rate)}"
         )

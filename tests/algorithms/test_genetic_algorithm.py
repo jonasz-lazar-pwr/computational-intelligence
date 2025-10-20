@@ -79,12 +79,14 @@ def test_evaluate_population(genetic_algorithm: GeneticAlgorithm):
 
 def test_update_best_improves_only(genetic_algorithm: GeneticAlgorithm):
     ga = genetic_algorithm
-    ga._update_best(10.0)
+    now = time.time()
+    ga._update_best(10.0, now)
     assert ga.best_cost == 10.0
-    ga._update_best(15.0)
+    ga._update_best(15.0, now + 1)
     assert ga.best_cost == 10.0
-    ga._update_best(5.0)
+    ga._update_best(5.0, now + 2)
     assert ga.best_cost == 5.0
+    assert ga._last_improvement_time is not None
 
 
 def test_run_executes_and_returns_results(genetic_algorithm: GeneticAlgorithm):
@@ -104,6 +106,37 @@ def test_run_stops_within_time_limit(genetic_algorithm: GeneticAlgorithm):
     assert elapsed < 0.5
 
 
+def test_run_stops_due_to_stagnation(mock_problem, operator_factory):
+    """Ensure GA stops early if best cost doesn't improve for a while."""
+    selection = operator_factory.get_operator("selection", "tournament", rate=0.5)
+    crossover = operator_factory.get_operator("crossover", "ox")
+    mutation = operator_factory.get_operator("mutation", "insert")
+    succession = operator_factory.get_operator("succession", "elitist", elite_rate=0.5)
+
+    ga = GeneticAlgorithm(
+        problem=mock_problem,
+        selection=selection,
+        crossover=crossover,
+        mutation=mutation,
+        succession=succession,
+        population_size=4,
+        crossover_rate=0.9,
+        mutation_rate=0.1,
+        max_time=10.0,
+        seed=1,
+    )
+
+    ga._no_improvement_limit = 0.2
+
+    start = time.time()
+    result = ga.run()
+    elapsed = time.time() - start
+
+    assert elapsed < 1.0, "Algorithm should stop early due to stagnation"
+    assert isinstance(result["history"], list)
+    assert len(result["history"]) > 0
+
+
 def test_internal_randomness_does_not_break(genetic_algorithm: GeneticAlgorithm, monkeypatch):
     ga = genetic_algorithm
     monkeypatch.setattr("random.random", lambda: 0.0)
@@ -113,7 +146,7 @@ def test_internal_randomness_does_not_break(genetic_algorithm: GeneticAlgorithm,
 
 
 def test_seed_produces_deterministic_results(mock_problem, operator_factory):
-    """Ensure the same seed produces identical optimization behavior (ignoring timing and iteration count)."""
+    """Ensure same seed produces identical best cost trajectories."""
     selection = operator_factory.get_operator("selection", "tournament", rate=0.5)
     crossover = operator_factory.get_operator("crossover", "ox")
     mutation = operator_factory.get_operator("mutation", "insert")
@@ -140,10 +173,6 @@ def test_seed_produces_deterministic_results(mock_problem, operator_factory):
     costs2 = [c for _, c in result2["history"]]
 
     min_len = min(len(costs1), len(costs2))
-    costs1 = costs1[:min_len]
-    costs2 = costs2[:min_len]
-
-    assert costs1 == costs2, (
-        f"Cost trajectories differ despite identical seeds: "
-        f"len1={len(result1['history'])}, len2={len(result2['history'])}"
+    assert costs1[:min_len] == costs2[:min_len], (
+        f"Cost trajectories differ despite identical seeds: len1={len(costs1)}, len2={len(costs2)}"
     )

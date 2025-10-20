@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, ClassVar
 
 from src.interfaces.factories_interfaces import IProblemFactory
@@ -19,5 +20,7 @@ class ProblemFactory(IProblemFactory):
         except KeyError as err:
             raise ValueError(f"Unknown problem: {name}") from err
 
-        instance = instance_cls(**config)
+        safe_config = deepcopy(config)
+
+        instance = instance_cls(**safe_config)
         return problem_cls(instance)

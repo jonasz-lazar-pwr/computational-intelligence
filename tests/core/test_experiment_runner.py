@@ -8,7 +8,7 @@ from src.core.models import ExperimentConfig
 
 @pytest.fixture
 def mock_collector():
-    """Provide mock IResultCollector."""
+    """Mock shared IResultCollector used across all tests."""
     collector = MagicMock()
     collector.collect_run = MagicMock()
     collector.finalize_config = MagicMock()
@@ -17,7 +17,7 @@ def mock_collector():
 
 @pytest.fixture
 def sample_config():
-    """Provide minimal ExperimentConfig instance."""
+    """Provide minimal valid ExperimentConfig instance."""
     return ExperimentConfig(
         name="exp_test",
         runs=2,
@@ -37,8 +37,8 @@ def sample_config():
     )
 
 
-def test_run_all_calls_single_for_each_config(mock_collector, sample_config):
-    """Run all configs exactly once per entry."""
+def test_run_all_invokes_run_single_per_config(mock_collector, sample_config):
+    """Ensure _run_single is called once per provided ExperimentConfig."""
     runner = ExperimentRunner(mock_collector)
     with patch.object(runner, "_run_single", autospec=True) as mock_run:
         runner.run_all([sample_config, sample_config])
@@ -46,7 +46,7 @@ def test_run_all_calls_single_for_each_config(mock_collector, sample_config):
 
 
 def test_run_all_logs_warning_for_empty_list(mock_collector, caplog):
-    """Log warning if config list is empty."""
+    """Should log a warning when called with an empty list."""
     runner = ExperimentRunner(mock_collector)
     with caplog.at_level("WARNING"):
         runner.run_all([])
@@ -58,7 +58,7 @@ def test_run_all_logs_warning_for_empty_list(mock_collector, caplog):
 def test_single_run_executes_collects_and_finalizes(
     mock_algo_factory, mock_problem_factory, mock_collector, sample_config
 ):
-    """Build problem, run algorithm, and finalize results."""
+    """Should build problem, run algorithm for all runs, and finalize results."""
     mock_problem = MagicMock()
     mock_problem.optimal_value.return_value = 123.0
     mock_problem_factory.build.return_value = mock_problem
@@ -70,13 +70,14 @@ def test_single_run_executes_collects_and_finalizes(
     runner = ExperimentRunner(mock_collector)
     runner._run_single(sample_config)
 
-    assert mock_problem_factory.build.called
+    mock_problem_factory.build.assert_called_once()
     assert mock_algo_factory.build.call_count == sample_config.runs
 
     seeds_used = [
         call.kwargs["seed"] for call in mock_algo_factory.build.mock_calls if "seed" in call.kwargs
     ]
-    assert seeds_used == [sample_config.seed_base + i for i in range(1, sample_config.runs + 1)]
+    expected_seeds = [sample_config.seed_base + i for i in range(1, sample_config.runs + 1)]
+    assert seeds_used == expected_seeds
 
     assert mock_collector.collect_run.call_count == sample_config.runs
     mock_collector.finalize_config.assert_called_once_with(
@@ -89,9 +90,9 @@ def test_single_run_executes_collects_and_finalizes(
 def test_single_run_handles_missing_optimal_value(
     mock_algo_factory, mock_problem_factory, mock_collector, sample_config
 ):
-    """Handle problems without optimal_value method."""
+    """Should handle missing optimal_value() gracefully."""
     mock_problem = MagicMock()
-    delattr(mock_problem, "optimal_value")
+    delattr(mock_problem, "optimal_value")  # simulate missing method
     mock_problem_factory.build.return_value = mock_problem
     mock_algo_factory.build.return_value.run.return_value = {"history": [(0.5, 9.0)]}
 
@@ -106,10 +107,11 @@ def test_single_run_handles_missing_optimal_value(
 @patch("src.core.experiment_runner.ProblemFactory")
 @patch("src.core.experiment_runner.AlgorithmFactory")
 def test_run_all_catches_exceptions_and_logs(_, mock_collector, sample_config, caplog):
-    """Catch exceptions and log errors."""
+    """Should catch exceptions during execution and log them."""
     runner = ExperimentRunner(mock_collector)
     with patch.object(runner, "_run_single", side_effect=ValueError("boom")):
         with caplog.at_level("ERROR"):
             runner.run_all([sample_config])
+
     assert "Error during execution" in caplog.text
     assert "boom" in caplog.text

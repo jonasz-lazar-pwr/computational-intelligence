@@ -45,7 +45,7 @@ class INameGenerator(ABC):
     """Generates unique experiment identifiers."""
 
     @abstractmethod
-    def generate(self, problem: dict[str, Any], alg: dict[str, Any], prefix: str) -> str:
+    def generate(self, problem: dict[str, Any], alg: dict[str, Any]) -> str:
         """Generate standardized experiment name."""
         pass
 

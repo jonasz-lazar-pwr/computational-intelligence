@@ -1,46 +1,49 @@
-import json
-
 from pathlib import Path
 
-from src.core.logger import get_logger
-from src.factories.algorithm_factory import AlgorithmFactory
-from src.factories.problem_factory import ProblemFactory
+from src.core.config_expander import ConfigExpander
+from src.core.config_loader import ConfigLoader
+from src.core.config_service import ConfigService
+from src.core.config_validator import ConfigValidator
+from src.core.experiment_runner import ExperimentRunner
+from src.core.logger import disable_file_logging, get_logger
+from src.core.name_generator import NameGenerator
+from src.core.result_collector import ResultCollector
+from src.core.statistics import Statistics
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 logger = get_logger(__name__)
 
 
 def main() -> None:
-    """Run Genetic Algorithm with factory-based configuration."""
-    logger.info(f"Running from base directory: {BASE_DIR}")
+    """Load configurations and execute all experiments."""
+    disable_file_logging()
 
-    # === Problem initialization ===
-    tsp_args = {
-        "file_path": str(BASE_DIR / "data" / "tsplib" / "ulysses16.tsp"),
-        "optimal_results_path": str(BASE_DIR / "data" / "optimal_results.json"),
-    }
-    problem = ProblemFactory.build("tsp", **tsp_args)
+    logger.info(f"Running experiments from base directory: {BASE_DIR}")
 
-    # === Algorithm configuration ===
-    algorithm_config = {
-        "problem": problem,
-        "population_size": 100,
-        "crossover_rate": 0.9,
-        "mutation_rate": 0.05,
-        "max_time": 10.0,
-        "selection_config": {"name": "tournament", "rate": 0.1},
-        "crossover_config": {"name": "ox"},
-        "mutation_config": {"name": "insert"},
-        "succession_config": {"name": "elitist", "elite_rate": 0.1},
-    }
+    # === Configuration setup ===
+    config_path = BASE_DIR / "config" / "experiments_config.yaml"
+    output_dir = BASE_DIR / "results"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # === Build and run algorithm ===
-    algorithm = AlgorithmFactory.build("ga", **algorithm_config)
-    result = algorithm.run()
+    validator = ConfigValidator()
+    loader = ConfigLoader(str(config_path), validator)
+    expander = ConfigExpander(validator, NameGenerator())
+    config_service = ConfigService(loader, validator, expander)
 
-    # === Output ===
-    logger.info("Optimization results:\n%s", json.dumps(result, indent=2))
-    logger.info("Optimization complete.")
+    configs = config_service.load_all()
+    if not configs:
+        logger.warning("No valid experiment configurations found. Exiting.")
+        return
+
+    # === Statistics & result management ===
+    statistics = Statistics()
+    collector = ResultCollector(output_dir, statistics)
+
+    # === Run experiments ===
+    runner = ExperimentRunner(collector)
+    runner.run_all(configs)
+
+    logger.info("All experiments completed successfully.")
 
 
 if __name__ == "__main__":

@@ -44,8 +44,19 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def disable_file_logging() -> None:
-    """Disable file logging (useful for tests or batch runs)."""
+    """Disable all file-based logging handlers."""
     root = logging.getLogger()
     for handler in root.handlers[:]:
         if isinstance(handler, logging.FileHandler):
             root.removeHandler(handler)
+    logging.getLogger().disabled = False
+    logging.debug("File logging disabled.")
+
+
+def enable_file_logging() -> None:
+    """Re-enable file logging (after it was disabled)."""
+    root = logging.getLogger()
+    has_file_handler = any(isinstance(h, logging.FileHandler) for h in root.handlers)
+    if not has_file_handler:
+        root.addHandler(file_handler)
+    logging.debug("File logging re-enabled.")

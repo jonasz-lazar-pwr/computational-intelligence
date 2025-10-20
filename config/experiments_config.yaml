@@ -1,0 +1,42 @@
+sweep:
+  - name: sweep_experiments
+    runs: 2
+    seed_base: 42
+
+    problem:
+      name: tsp
+      instance_name: berlin52
+      file_path: data/tsplib/berlin52.tsp
+      optimal_results_path: data/optimal_results.json
+
+    algorithm:
+      name: ga
+      population_size: [200, 800]
+      crossover_rate: [0.85, 0.95]
+      mutation_rate: [0.02, 0.05]
+      max_time: [1.0]
+
+      # === SELECTION ===
+      selection_config:
+        - name: tournament
+          rate: [0.03, 0.07]
+#        - name: roulette
+        - name: rank
+
+      # === CROSSOVER ===
+      crossover_config:
+#        - name: ox
+        - name: cx
+#        - name: pmx
+
+      # === MUTATION ===
+      mutation_config:
+#        - name: insert
+        - name: swap
+
+      # === SUCCESSION ===
+      succession_config:
+        - name: elitist
+          elite_rate: [0.03, 0.07]
+        - name: steady_state
+          replacement_rate: [0.03, 0.07]
