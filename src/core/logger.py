@@ -41,3 +41,11 @@ logging.basicConfig(
 def get_logger(name: str) -> logging.Logger:
     """Return a namespaced logger."""
     return logging.getLogger(name)
+
+
+def disable_file_logging() -> None:
+    """Disable file logging (useful for tests or batch runs)."""
+    root = logging.getLogger()
+    for handler in root.handlers[:]:
+        if isinstance(handler, logging.FileHandler):
+            root.removeHandler(handler)

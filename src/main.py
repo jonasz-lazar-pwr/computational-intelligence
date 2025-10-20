@@ -31,7 +31,7 @@ def main() -> None:
         "selection_config": {"name": "tournament", "rate": 0.1},
         "crossover_config": {"name": "ox"},
         "mutation_config": {"name": "insert"},
-        "succession_config": {"name": "elitist", "rate": 0.1},
+        "succession_config": {"name": "elitist", "elite_rate": 0.1},
     }
 
     # === Build and run algorithm ===
