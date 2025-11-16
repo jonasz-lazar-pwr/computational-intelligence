@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 
 class ExperimentRunner(IExperimentRunner):
-    """Executes all experiment configurations and aggregates results into a global summary."""
+    """Executes all experiment configurations and aggregates results into a global results."""
 
     def __init__(self, collector: IResultCollector) -> None:
         """Initialize with a shared result collector."""
@@ -67,4 +67,4 @@ class ExperimentRunner(IExperimentRunner):
         optimal_value = optimal_func() if callable(optimal_func) else None
 
         self._collector.finalize_config(cfg.name, optimal_value, cfg.runs)
-        logger.info(f"Finished {cfg.name} and appended to summary.")
+        logger.info(f"Finished {cfg.name} and appended to results.")

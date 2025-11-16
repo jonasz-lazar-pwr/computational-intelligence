@@ -7,7 +7,7 @@ from src.factories.algorithm_factory import AlgorithmFactory
 
 
 class DummyProblem:
-    """Minimal mock of IProblem for testing AlgorithmFactory."""
+    """Minimal test problem for GA."""
 
     def get_initial_solution(self):
         return [0, 1, 2]
@@ -21,7 +21,7 @@ class DummyProblem:
 
 @pytest.fixture
 def base_config():
-    """Return base configuration for algorithm construction."""
+    """Return base GA configuration."""
     return {
         "problem": DummyProblem(),
         "population_size": 10,
@@ -36,7 +36,7 @@ def base_config():
 
 
 def test_build_creates_genetic_algorithm(monkeypatch, base_config):
-    """Verify factory builds a valid GeneticAlgorithm instance."""
+    """Verify GA instance is correctly built."""
     fake_op = MagicMock()
 
     monkeypatch.setattr(
@@ -58,20 +58,20 @@ def test_build_creates_genetic_algorithm(monkeypatch, base_config):
 
 
 def test_build_raises_for_unknown_algorithm():
-    """Unknown algorithm name should raise ValueError."""
+    """Raise ValueError for unknown algorithm type."""
     with pytest.raises(ValueError) as e:
         AlgorithmFactory.build("nonexistent", problem=DummyProblem())
     assert "Unknown algorithm" in str(e.value)
 
 
 def test_registry_contains_ga_entry():
-    """Ensure GA is correctly registered in AlgorithmFactory."""
+    """Ensure GA is registered in AlgorithmFactory."""
     assert "ga" in AlgorithmFactory._REGISTRY
     assert AlgorithmFactory._REGISTRY["ga"] is GeneticAlgorithm
 
 
 def test_build_invokes_operator_factory(monkeypatch, base_config):
-    """Ensure all operator types are requested from OperatorFactory."""
+    """Ensure all operator types are requested."""
     called = []
 
     def fake_get_operator(self, category, **cfg):
@@ -87,7 +87,7 @@ def test_build_invokes_operator_factory(monkeypatch, base_config):
 
 
 def test_build_passes_correct_configs(monkeypatch, base_config):
-    """Ensure configuration dicts are forwarded correctly."""
+    """Ensure operator configs are forwarded correctly."""
     captured = {}
 
     def fake_get_operator(self, category, **cfg):
@@ -106,7 +106,7 @@ def test_build_passes_correct_configs(monkeypatch, base_config):
 
 
 def test_build_returns_distinct_operator_instances(monkeypatch, base_config):
-    """Each operator type should produce a distinct instance."""
+    """Ensure each operator is a distinct instance."""
 
     def fake_get_operator(self, category, **cfg):
         return MagicMock(name=f"Fake_{category}")
@@ -121,7 +121,7 @@ def test_build_returns_distinct_operator_instances(monkeypatch, base_config):
 
 
 def test_build_propagates_problem_object(monkeypatch, base_config):
-    """Ensure the problem instance is correctly passed to algorithm."""
+    """Ensure the problem instance is passed to GA."""
     fake_op = MagicMock()
 
     monkeypatch.setattr(

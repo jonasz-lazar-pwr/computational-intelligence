@@ -9,14 +9,15 @@ logger = get_logger(__name__)
 
 
 class ConfigExpander(IConfigExpander):
-    """Expands parsed YAML data into ExperimentConfig instances."""
+    """Expand parsed YAML configuration into ExperimentConfig instances."""
 
     def __init__(self, validator: IConfigValidator, namer: INameGenerator):
+        """Initialize expander with validator and name generator."""
         self._validator = validator
         self._namer = namer
 
     def expand(self, data: dict) -> list[ExperimentConfig]:
-        """Expand YAML data into experiment configurations."""
+        """Expand root YAML block into experiment configurations."""
         if "experiments" in data:
             return self._manual(data["experiments"])
         if "sweep" in data:
@@ -25,7 +26,7 @@ class ConfigExpander(IConfigExpander):
         return []
 
     def _manual(self, experiments: list[dict]) -> list[ExperimentConfig]:
-        """Expand manually defined experiments."""
+        """Expand manual experiment definitions."""
         configs = []
         for exp in experiments:
             self._validator.validate_problem(exp["problem"])
@@ -43,7 +44,7 @@ class ConfigExpander(IConfigExpander):
         return configs
 
     def _expand_nested_dict(self, d: dict) -> list[dict]:
-        """Expand dict where some fields are lists."""
+        """Expand nested dict fields containing list values."""
         if not d:
             return [{}]
         keys = list(d.keys())
@@ -51,7 +52,7 @@ class ConfigExpander(IConfigExpander):
         return [dict(zip(keys, combo, strict=False)) for combo in product(*values)]
 
     def _expand_operator_section(self, section):
-        """Expand operator section — supports dict or list of dicts."""
+        """Expand operator configuration into explicit combinations."""
         if isinstance(section, dict):
             return self._expand_nested_dict(section)
         if isinstance(section, list):
@@ -62,7 +63,7 @@ class ConfigExpander(IConfigExpander):
         return [section]
 
     def _sweep(self, sweeps: list[dict]) -> list[ExperimentConfig]:
-        """Expand parameter sweeps into all valid experiment configurations."""
+        """Expand sweep definitions into experiment configurations."""
         configs = []
         seen = set()
 
@@ -74,17 +75,19 @@ class ConfigExpander(IConfigExpander):
 
             self._validator.validate_problem(problem)
 
-            # Expand operator sections
-            for op_key in [
-                "selection_config",
-                "crossover_config",
-                "mutation_config",
-                "succession_config",
-            ]:
-                if op_key in algorithm:
+            algo_type = algorithm.get("name")
+            if algo_type not in ("ga", "acs"):
+                raise ValueError(f"Unsupported algorithm type in sweep: {algo_type}")
+
+            if algo_type == "ga":
+                for op_key in [
+                    "selection_config",
+                    "crossover_config",
+                    "mutation_config",
+                    "succession_config",
+                ]:
                     algorithm[op_key] = self._expand_operator_section(algorithm[op_key])
 
-            # Split scalar vs list params
             base_keys = {k: v for k, v in algorithm.items() if not isinstance(v, list)}
             list_keys = {k: v for k, v in algorithm.items() if isinstance(v, list)}
 
@@ -92,41 +95,46 @@ class ConfigExpander(IConfigExpander):
                 alg_cfg = deepcopy(base_keys)
                 alg_cfg.update(dict(zip(list_keys.keys(), values, strict=False)))
 
-                # Combine operator configurations (Cartesian product)
-                operator_products = product(
-                    *[
-                        algorithm[k]
-                        for k in [
-                            "selection_config",
-                            "crossover_config",
-                            "mutation_config",
-                            "succession_config",
-                        ]
-                        if k in algorithm
-                    ]
-                )
+                if algo_type == "ga":
+                    operator_products = product(
+                        algorithm["selection_config"],
+                        algorithm["crossover_config"],
+                        algorithm["mutation_config"],
+                        algorithm["succession_config"],
+                    )
 
-                for op_combo in operator_products:
-                    final_cfg = deepcopy(alg_cfg)
-                    for i, k in enumerate(
-                        [
-                            "selection_config",
-                            "crossover_config",
-                            "mutation_config",
-                            "succession_config",
-                        ]
-                    ):
-                        if k in algorithm:
-                            final_cfg[k] = op_combo[i]
+                    for sel, cx, mut, succ in operator_products:
+                        final_cfg = deepcopy(alg_cfg)
+                        final_cfg["selection_config"] = sel
+                        final_cfg["crossover_config"] = cx
+                        final_cfg["mutation_config"] = mut
+                        final_cfg["succession_config"] = succ
 
-                    # Deduplicate identical configs
-                    key = str(sorted(final_cfg.items()))
+                        key = str(sorted(final_cfg.items()))
+                        if key in seen:
+                            continue
+                        seen.add(key)
+
+                        self._validator.validate_algorithm(final_cfg, allow_lists=False)
+                        name = self._namer.generate(problem, final_cfg)
+
+                        configs.append(
+                            ExperimentConfig(
+                                name=name,
+                                runs=runs,
+                                seed_base=seed_base,
+                                problem=problem,
+                                algorithm=final_cfg,
+                            )
+                        )
+                else:
+                    key = str(sorted(alg_cfg.items()))
                     if key in seen:
                         continue
                     seen.add(key)
 
-                    self._validator.validate_algorithm(final_cfg, allow_lists=False)
-                    name = self._namer.generate(problem, final_cfg)
+                    self._validator.validate_algorithm(alg_cfg, allow_lists=False)
+                    name = self._namer.generate(problem, alg_cfg)
 
                     configs.append(
                         ExperimentConfig(
@@ -134,7 +142,7 @@ class ConfigExpander(IConfigExpander):
                             runs=runs,
                             seed_base=seed_base,
                             problem=problem,
-                            algorithm=final_cfg,
+                            algorithm=alg_cfg,
                         )
                     )
 

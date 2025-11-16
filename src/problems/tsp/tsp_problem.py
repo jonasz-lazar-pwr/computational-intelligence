@@ -34,6 +34,13 @@ class TSPProblem(IProblem):
         )
         return float(total)
 
+    def get_distance(self, i: int, j: int) -> float:
+        """Return distance between cities i and j."""
+        dist = self.instance.get_distance_matrix()
+        if not dist:
+            raise RuntimeError("Distance matrix not loaded.")
+        return float(dist[i][j])
+
     def get_initial_solution(self) -> List[int]:
         """Return default sequential tour."""
         return list(range(self.get_dimension()))

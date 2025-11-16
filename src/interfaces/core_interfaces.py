@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, List, Tuple
+
+import pandas as pd
 
 from src.core.models import ExperimentConfig
 
@@ -69,12 +72,12 @@ class IResultCollector(ABC):
 
     @abstractmethod
     def finalize_config(self, config_name: str, optimal_value: float | None, runs: int) -> None:
-        """Aggregate results across runs and save summary."""
+        """Aggregate results across runs and save results."""
         pass
 
 
 class IStatistics(ABC):
-    """Computes summary metrics for experiment results."""
+    """Computes results metrics for experiment results."""
 
     @abstractmethod
     def compute_mean_error(self, results: List[float], optimum: float | None) -> float:
@@ -93,4 +96,61 @@ class IExperimentRunner(ABC):
     @abstractmethod
     def run_all(self, configs: List[ExperimentConfig]) -> None:
         """Run all experiments and delegate results to collector."""
+        pass
+
+
+class IResultParser(ABC):
+    """Interface for parsing result files."""
+
+    @abstractmethod
+    def load(self) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def parse(self) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def export_csv(self, output_path: Path) -> None:
+        """"""
+        pass
+
+    @abstractmethod
+    def get_dataframe(self) -> pd.DataFrame:
+        """"""
+        pass
+
+
+class ILatexTableGenerator(ABC):
+    """Interface for generating LaTeX tables from experiment data."""
+
+    @abstractmethod
+    def generate(self, csv_path: Path, output_path: Path, top_n: int) -> None:
+        """Generate LaTeX table from CSV and export to file."""
+        pass
+
+
+class IComparisonPlotGenerator(ABC):
+    """Interface for generating comparison plots from CSV results."""
+
+    @abstractmethod
+    def generate_selection_by_population(self, csv_path: Path, output_path: Path) -> None:
+        """Bar chart: selection x population -> mean error [%]."""
+        pass
+
+    @abstractmethod
+    def generate_crossover_by_succession(self, csv_path: Path, output_path: Path) -> None:
+        """Bar chart: (crossover,param) x succession -> mean error [%]."""
+        pass
+
+    @abstractmethod
+    def generate_mutation_by_selection(self, csv_path: Path, output_path: Path) -> None:
+        """Bar chart: (mutation,param) x selection -> mean error [%]."""
+        pass
+
+    @abstractmethod
+    def generate_succession_vs_selection_heatmap(self, csv_path: Path, output_path: Path) -> None:
+        """Bar chart: (succession,param) x selection -> mean error [%]."""
         pass

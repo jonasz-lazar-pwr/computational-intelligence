@@ -21,6 +21,11 @@ class IProblem(ABC):
         pass
 
     @abstractmethod
+    def get_distance(self, i: int, j: int) -> float:
+        """Return distance or cost between element i and j."""
+        pass
+
+    @abstractmethod
     def optimal_value(self) -> float | None:
         """Return known optimal value if available."""
         pass

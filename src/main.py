@@ -48,3 +48,30 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+    # results_path = output_dir / "results.json"
+    # parser = ResultParser(results_path)
+    # parser.load()
+    # parser.parse()
+    # parser.export_csv(output_dir / "results_parsed.csv")
+    #
+    # parser_output = output_dir / "results_parsed.csv"
+    # latex_output = output_dir / "results_table.tex"
+    #
+    # table_generator = LatexTableGenerator()
+    # table_generator.generate(parser_output, latex_output, 40)
+
+    # plots = ComparisonPlotGenerator()
+    #
+    # plots.generate_selection_by_population(
+    #     parser_output, BASE_DIR / "results" / "fig" / "sel_vs_pop.png"
+    # )
+    # plots.generate_crossover_by_succession(
+    #     parser_output, BASE_DIR / "results" / "fig" / "cross_vs_succ.png"
+    # )
+    # plots.generate_mutation_by_selection(
+    #     parser_output, BASE_DIR / "results" / "fig" / "mut_vs_sel.png"
+    # )
+    # plots.generate_succession_vs_selection_heatmap(
+    #     parser_output, BASE_DIR / "results" / "fig" / "succ_vs_sel.png"
+    # )

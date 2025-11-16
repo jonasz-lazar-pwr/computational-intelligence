@@ -24,6 +24,9 @@ class DummyProblem(IProblem):
     def get_dimension(self) -> int:
         return self._dimension
 
+    def get_distance(self, i: int, j: int) -> float:
+        return abs(i - j) + 1
+
     def optimal_value(self) -> float | None:
         return None
 

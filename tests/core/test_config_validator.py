@@ -5,12 +5,12 @@ from src.core.config_validator import ConfigValidator
 
 @pytest.fixture
 def validator():
-    """Provide ConfigValidator instance."""
+    """Return ConfigValidator."""
     return ConfigValidator()
 
 
 def test_validate_root_accepts_valid_experiments(validator, caplog):
-    """Accept valid root with experiments section."""
+    """Validate root with 'experiments' section."""
     data = {"experiments": []}
     with caplog.at_level("DEBUG"):
         validator.validate_root(data)
@@ -18,27 +18,26 @@ def test_validate_root_accepts_valid_experiments(validator, caplog):
 
 
 def test_validate_root_accepts_valid_sweep(validator):
-    """Accept valid root with sweep section."""
-    data = {"sweep": []}
-    validator.validate_root(data)
+    """Validate root with 'sweep' section."""
+    validator.validate_root({"sweep": []})
 
 
 @pytest.mark.parametrize("data", [None, [], "string", 123])
 def test_validate_root_raises_if_not_dict(validator, data):
-    """Raise ValueError if root is not a dict."""
+    """Raise if root is not a mapping."""
     with pytest.raises(ValueError, match="Top-level YAML must be a mapping"):
         validator.validate_root(data)
 
 
 def test_validate_root_raises_if_missing_sections(validator):
-    """Raise ValueError if required root keys are missing."""
+    """Raise if root lacks required sections."""
     with pytest.raises(ValueError, match="YAML must contain either 'experiments' or 'sweep'"):
         validator.validate_root({"invalid": []})
 
 
 def test_validate_problem_accepts_valid(validator, caplog):
-    """Accept valid problem section."""
-    problem = {"file_path": "path.tsp", "optimal_results_path": "opt.json"}
+    """Validate valid problem section."""
+    problem = {"file_path": "a.tsp", "optimal_results_path": "opt.json"}
     with caplog.at_level("DEBUG"):
         validator.validate_problem(problem)
     assert "Problem configuration validated successfully." in caplog.text
@@ -46,24 +45,17 @@ def test_validate_problem_accepts_valid(validator, caplog):
 
 @pytest.mark.parametrize(
     "problem",
-    [
-        {},
-        {"file_path": "only_path.tsp"},
-        {"optimal_results_path": "only_opt.json"},
-    ],
+    [{}, {"file_path": "only.tsp"}, {"optimal_results_path": "only.json"}],
 )
 def test_validate_problem_raises_on_missing_fields(validator, problem):
-    """Raise ValueError if problem fields are missing."""
-    with pytest.raises(
-        ValueError,
-        match="Problem section must contain 'file_path' and 'optimal_results_path'",
-    ):
+    """Raise when problem fields missing."""
+    with pytest.raises(ValueError, match="Problem section must contain"):
         validator.validate_problem(problem)
 
 
 @pytest.fixture
-def valid_algorithm():
-    """Provide minimal valid algorithm configuration."""
+def valid_ga():
+    """Return minimal valid GA config."""
     return {
         "name": "ga",
         "population_size": 100,
@@ -77,51 +69,91 @@ def valid_algorithm():
     }
 
 
-def test_validate_algorithm_accepts_valid(validator, valid_algorithm, caplog):
-    """Accept valid algorithm configuration."""
+def test_validate_algorithm_accepts_valid_ga(validator, valid_ga, caplog):
+    """Validate correct GA configuration."""
     with caplog.at_level("DEBUG"):
-        validator.validate_algorithm(valid_algorithm, allow_lists=False)
+        validator.validate_algorithm(valid_ga, allow_lists=False)
     assert "Algorithm configuration validated successfully." in caplog.text
 
 
 @pytest.mark.parametrize(
     "missing_key",
-    ["name", "population_size", "crossover_rate", "mutation_rate", "max_time"],
+    ["population_size", "crossover_rate", "mutation_rate", "max_time"],
 )
-def test_validate_algorithm_raises_on_missing_required_field(
-    validator, valid_algorithm, missing_key
-):
-    """Raise ValueError if required algorithm field is missing."""
-    del valid_algorithm[missing_key]
+def test_validate_algorithm_ga_missing_required_field(validator, valid_ga, missing_key):
+    """Raise for missing GA required scalar fields."""
+    del valid_ga[missing_key]
     with pytest.raises(ValueError, match=f"Missing required algorithm field: {missing_key}"):
-        validator.validate_algorithm(valid_algorithm, allow_lists=False)
+        validator.validate_algorithm(valid_ga, allow_lists=False)
 
 
 @pytest.mark.parametrize(
     "missing_section",
     ["selection_config", "crossover_config", "mutation_config", "succession_config"],
 )
-def test_validate_algorithm_raises_on_missing_subconfig(
-    validator, valid_algorithm, missing_section
-):
-    """Raise ValueError if required subconfig is missing."""
-    del valid_algorithm[missing_section]
+def test_validate_algorithm_ga_missing_operator_sections(validator, valid_ga, missing_section):
+    """Raise for missing GA operator sections."""
+    del valid_ga[missing_section]
     with pytest.raises(
         ValueError, match=f"Algorithm configuration must include {missing_section} section"
     ):
-        validator.validate_algorithm(valid_algorithm, allow_lists=False)
+        validator.validate_algorithm(valid_ga, allow_lists=False)
 
 
-def test_validate_algorithm_raises_on_list_when_not_allowed(validator, valid_algorithm):
-    """Raise ValueError if list values not allowed outside sweep mode."""
-    valid_algorithm["population_size"] = [100, 200]
-    with pytest.raises(
-        ValueError, match="Unexpected list in algorithm config for field: population_size"
-    ):
-        validator.validate_algorithm(valid_algorithm, allow_lists=False)
+def test_validate_algorithm_ga_rejects_list_when_not_allowed(validator, valid_ga):
+    """Reject lists when allow_lists=False."""
+    valid_ga["population_size"] = [10, 20]
+    with pytest.raises(ValueError, match="Unexpected list"):
+        validator.validate_algorithm(valid_ga, allow_lists=False)
 
 
-def test_validate_algorithm_allows_list_in_sweep_mode(validator, valid_algorithm):
-    """Allow list fields when allow_lists=True."""
-    valid_algorithm["population_size"] = [100, 200]
-    validator.validate_algorithm(valid_algorithm, allow_lists=True)
+def test_validate_algorithm_ga_allows_list_in_sweep(validator, valid_ga):
+    """Allow lists when allow_lists=True."""
+    valid_ga["population_size"] = [10, 20]
+    validator.validate_algorithm(valid_ga, allow_lists=True)
+
+
+@pytest.fixture
+def valid_acs():
+    """Return minimal valid ACS config."""
+    return {
+        "name": "acs",
+        "num_ants": 5,
+        "alpha": 1.0,
+        "beta": 2.0,
+        "rho": 0.1,
+        "phi": 0.05,
+        "q0": 0.8,
+        "max_time": 10,
+    }
+
+
+def test_validate_algorithm_accepts_valid_acs(validator, valid_acs, caplog):
+    """Validate correct ACS configuration."""
+    with caplog.at_level("DEBUG"):
+        validator.validate_algorithm(valid_acs, allow_lists=False)
+    assert "Algorithm configuration validated successfully." in caplog.text
+
+
+@pytest.mark.parametrize(
+    "missing_key",
+    ["num_ants", "alpha", "beta", "rho", "phi", "q0", "max_time"],
+)
+def test_validate_algorithm_acs_missing_required_fields(validator, valid_acs, missing_key):
+    """Raise for missing ACS required fields."""
+    del valid_acs[missing_key]
+    with pytest.raises(ValueError, match=f"Missing required ACS field: {missing_key}"):
+        validator.validate_algorithm(valid_acs, allow_lists=False)
+
+
+def test_validate_algorithm_acs_rejects_unknown_fields(validator, valid_acs):
+    """Reject GA-only fields in ACS."""
+    valid_acs["population_size"] = 10
+    with pytest.raises(ValueError, match="Unexpected GA field in ACS"):
+        validator.validate_algorithm(valid_acs, allow_lists=False)
+
+
+def test_validate_algorithm_acs_allows_lists_in_sweep(validator, valid_acs):
+    """Allow lists in ACS when allow_lists=True."""
+    valid_acs["num_ants"] = [5, 10]
+    validator.validate_algorithm(valid_acs, allow_lists=True)

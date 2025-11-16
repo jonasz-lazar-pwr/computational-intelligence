@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 
 class GeneticAlgorithm(IAlgorithm):
-    """Genetic algorithm for permutation-based optimization with stagnation-based stop."""
+    """Genetic algorithm implementation."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -32,7 +32,7 @@ class GeneticAlgorithm(IAlgorithm):
         max_time: float,
         seed: int | None = None,
     ) -> None:
-        """Initialize the algorithm with operators, parameters, and optional seed."""
+        """Initialize algorithm parameters, operators and RNG."""
         super().__init__()
         self.problem = problem
         self.selection = selection
@@ -48,22 +48,22 @@ class GeneticAlgorithm(IAlgorithm):
         self.history: list[tuple[float, float]] = []
         self._rng = random.Random(seed)
 
-        self._no_improvement_limit = 3.0
+        self._no_improvement_limit = 2.0
         self._last_improvement_time: float | None = None
 
         if seed is not None:
             logger.debug(f"GeneticAlgorithm initialized with seed={seed}")
 
     def _random(self) -> float:
-        """Return a random float using the local RNG."""
+        """Return a random float from the internal RNG."""
         return self._rng.random()
 
     def _sample(self, seq: List[int], k: int) -> List[int]:
-        """Return a random sample of elements using the local RNG."""
+        """Sample k elements using the internal RNG."""
         return self._rng.sample(seq, k)
 
     def _initialize_population(self) -> List[List[int]]:
-        """Generate the initial random population."""
+        """Create the initial population."""
         base = self.problem.get_initial_solution()
         return [self._sample(base, len(base)) for _ in range(self.population_size)]
 
@@ -72,13 +72,13 @@ class GeneticAlgorithm(IAlgorithm):
         return [self.problem.evaluate(ind) for ind in population]
 
     def _update_best(self, cost: float, now: float) -> None:
-        """Update the best cost found so far and reset stagnation timer."""
+        """Update best cost and stagnation timer."""
         if cost < self.best_cost:
             self.best_cost = cost
             self._last_improvement_time = now
 
     def run(self) -> Dict[str, Any]:
-        """Run the genetic algorithm until time or stagnation limit is reached."""
+        """Execute GA until time limit or stagnation."""
         start = time.time()
         self._last_improvement_time = start
 
@@ -91,7 +91,6 @@ class GeneticAlgorithm(IAlgorithm):
             elapsed = now - start
             stagnation = now - (self._last_improvement_time or start)
 
-            # Stop condition
             if elapsed >= self.max_time or stagnation >= self._no_improvement_limit:
                 break
 
@@ -100,13 +99,11 @@ class GeneticAlgorithm(IAlgorithm):
                 p1 = self.selection.select(population, costs)
                 p2 = self.selection.select(population, costs)
 
-                # Crossover
                 if self._random() < self.crossover_rate:
                     c1, c2 = self.crossover.crossover(p1, p2)
                 else:
                     c1, c2 = p1[:], p2[:]
 
-                # Mutation
                 if self._random() < self.mutation_rate:
                     self.mutation.mutate(c1)
                 if self._random() < self.mutation_rate:
@@ -114,7 +111,6 @@ class GeneticAlgorithm(IAlgorithm):
 
                 offspring.extend([c1, c2])
 
-            # Evaluate and replace
             offspring_costs = self._evaluate_population(offspring)
             population, costs = self.succession.replace(
                 population, offspring, costs, offspring_costs
