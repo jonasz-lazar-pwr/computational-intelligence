@@ -1,0 +1,20 @@
+sweep:
+  - name: acs_reference
+    runs: 100
+    seed_base: 2000
+
+    problem:
+      name: tsp
+      instance_name: bays29
+      file_path: data/tsplib/bays29.tsp
+      optimal_results_path: data/optimal_results.json
+
+    algorithm:
+      name: acs
+      num_ants: 29
+      alpha: 1.0
+      beta: 3.0
+      rho: 0.1
+      phi: 0.1
+      q0: 0.85
+      max_time: 10.0

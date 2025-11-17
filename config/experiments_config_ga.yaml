@@ -1,0 +1,30 @@
+sweep:
+  - name: ga_reference
+    runs: 100
+    seed_base: 1000
+
+    problem:
+      name: tsp
+      instance_name: bays29
+      file_path: data/tsplib/bays29.tsp
+      optimal_results_path: data/optimal_results.json
+
+    algorithm:
+      name: ga
+      population_size: 800
+      crossover_rate: 0.95
+      mutation_rate: 0.05
+      max_time: 10.0
+
+      selection_config:
+        name: roulette
+
+      crossover_config:
+        name: ox
+
+      mutation_config:
+        name: insert
+
+      succession_config:
+        name: steady_state
+        replacement_rate: 0.07

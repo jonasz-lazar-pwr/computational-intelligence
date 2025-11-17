@@ -128,4 +128,4 @@ class GeneticAlgorithm(IAlgorithm):
             f"elapsed={elapsed:.2f}s, stagnation={stagnation:.2f}s"
         )
 
-        return {"history": self.history}
+        return {"history": self.history, "best_cost": self.best_cost}

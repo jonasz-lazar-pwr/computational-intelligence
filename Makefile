@@ -1,4 +1,8 @@
-.PHONY: format lint test check clean
+.PHONY: run format lint test check clean
+
+# Run the main application
+run:
+	python -m src.main
 
 # Auto-fix & format
 format:

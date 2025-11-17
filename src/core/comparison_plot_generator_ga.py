@@ -11,7 +11,7 @@ from src.interfaces.core_interfaces import IComparisonPlotGenerator
 logger = get_logger(__name__)
 
 
-class ComparisonPlotGenerator(IComparisonPlotGenerator):
+class GAComparisonPlotGenerator(IComparisonPlotGenerator):
     """Generate comparison plots for algorithm performance metrics."""
 
     _PALETTE: ClassVar[list[str]] = ["#1f77b4", "#ff7f0e"]

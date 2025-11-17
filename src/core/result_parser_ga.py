@@ -11,7 +11,7 @@ from src.interfaces.core_interfaces import IResultParser
 logger = get_logger(__name__)
 
 
-class ResultParser(IResultParser):
+class ResultParserGA(IResultParser):
     """Parse and process experiment results JSON into a structured DataFrame."""
 
     def __init__(self, results_path: Path):

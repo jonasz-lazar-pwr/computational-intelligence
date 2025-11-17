@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import pandas as pd
 
@@ -66,7 +66,7 @@ class IResultCollector(ABC):
     """Collects and saves algorithm execution results."""
 
     @abstractmethod
-    def collect_run(self, config_name: str, history: List[Tuple[float, float]]) -> None:
+    def collect_run(self, config_name: str, best_cost: float) -> None:
         """Store results of a single algorithm run."""
         pass
 

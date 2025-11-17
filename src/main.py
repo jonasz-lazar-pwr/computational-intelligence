@@ -1,13 +1,16 @@
 from pathlib import Path
 
+from src.core.comparison_plot_generator_acs import ACSComparisonPlotGenerator
 from src.core.config_expander import ConfigExpander
 from src.core.config_loader import ConfigLoader
 from src.core.config_service import ConfigService
 from src.core.config_validator import ConfigValidator
 from src.core.experiment_runner import ExperimentRunner
-from src.core.logger import disable_file_logging, get_logger
+from src.core.latex_table_generator_acs import LatexTableGeneratorACS
+from src.core.logger import get_logger
 from src.core.name_generator import NameGenerator
 from src.core.result_collector import ResultCollector
+from src.core.result_parser_acs import ResultParserACS
 from src.core.statistics import Statistics
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,9 +19,7 @@ logger = get_logger(__name__)
 
 def main() -> None:
     """Load configurations and execute all experiments."""
-    disable_file_logging()
-
-    logger.info(f"Running experiments from base directory: {BASE_DIR}")
+    logger.info("All experiments completed successfully.")
 
     # === Configuration setup ===
     config_path = BASE_DIR / "config" / "experiments_config.yaml"
@@ -45,33 +46,42 @@ def main() -> None:
 
     logger.info("All experiments completed successfully.")
 
+    results_path = Path("results/results.json")
+
+    parser = ResultParserACS(results_path)
+    parser.load()
+    parser.parse()
+    parser.export_csv(Path("results/acs_results.csv"))
+
+    gen = LatexTableGeneratorACS()
+    gen.generate(Path("results/acs_results.csv"), Path("results/acs_table.tex"), top_n=40)
+
+    plots = ACSComparisonPlotGenerator()
+
+    plots.plot_alpha_vs_beta(
+        Path("results/acs_results.csv"),
+        Path("results/fig/acs_alpha_vs_beta.png"),
+    )
+
+    plots.plot_rho_vs_phi(
+        Path("results/acs_results.csv"),
+        Path("results/fig/acs_rho_vs_phi.png"),
+    )
+
+    plots.plot_q0_vs_beta(
+        Path("results/acs_results.csv"),
+        Path("results/fig/acs_q0_vs_beta.png"),
+    )
+
+    plots.plot_ants_vs_rho(
+        Path("results/acs_results.csv"),
+        Path("results/fig/acs_ants_vs_rho.png"),
+    )
+
+    plots.plot_param_heatmap(
+        Path("results/acs_results.csv"), Path("results/fig/acs_param_global_influence.png")
+    )
+
 
 if __name__ == "__main__":
     main()
-
-    # results_path = output_dir / "results.json"
-    # parser = ResultParser(results_path)
-    # parser.load()
-    # parser.parse()
-    # parser.export_csv(output_dir / "results_parsed.csv")
-    #
-    # parser_output = output_dir / "results_parsed.csv"
-    # latex_output = output_dir / "results_table.tex"
-    #
-    # table_generator = LatexTableGenerator()
-    # table_generator.generate(parser_output, latex_output, 40)
-
-    # plots = ComparisonPlotGenerator()
-    #
-    # plots.generate_selection_by_population(
-    #     parser_output, BASE_DIR / "results" / "fig" / "sel_vs_pop.png"
-    # )
-    # plots.generate_crossover_by_succession(
-    #     parser_output, BASE_DIR / "results" / "fig" / "cross_vs_succ.png"
-    # )
-    # plots.generate_mutation_by_selection(
-    #     parser_output, BASE_DIR / "results" / "fig" / "mut_vs_sel.png"
-    # )
-    # plots.generate_succession_vs_selection_heatmap(
-    #     parser_output, BASE_DIR / "results" / "fig" / "succ_vs_sel.png"
-    # )

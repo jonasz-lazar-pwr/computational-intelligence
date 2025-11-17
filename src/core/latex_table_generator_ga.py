@@ -9,7 +9,7 @@ from src.interfaces.core_interfaces import ILatexTableGenerator
 logger = get_logger(__name__)
 
 
-class LatexTableGenerator(ILatexTableGenerator):
+class LatexTableGeneratorGA(ILatexTableGenerator):
     """Generate LaTeX tables from experiment CSV data."""
 
     def __init__(self) -> None:
